@@ -31,6 +31,94 @@ function decryptText(text) {
     }
 }
 
+// Helper to get local holidays
+const getLocalHolidays = (year) => {
+    const targetYear = parseInt(year) || new Date().getFullYear();
+
+    let holidays = [
+        // ===== GLOBAL / NATIONAL =====
+        { name: "New Year", date: `${targetYear}-01-01`, public: true },
+        { name: "Republic Day", date: `${targetYear}-01-26`, public: true },
+        { name: "Labour Day", date: `${targetYear}-05-01`, public: true },
+        { name: "Independence Day", date: `${targetYear}-08-15`, public: true },
+        { name: "Gandhi Jayanti", date: `${targetYear}-10-02`, public: true },
+        { name: "Christmas", date: `${targetYear}-12-25`, public: true },
+    ];
+
+    if (targetYear === 2026) {
+        holidays.push(
+
+            // ===== JAN =====
+            { name: "Makar Sankranti", date: "2026-01-14", public: true },
+            { name: "Pongal", date: "2026-01-15", public: true },
+            { name: "Lohri", date: "2026-01-13", public: false },
+
+            // ===== FEB =====
+            { name: "Maha Shivratri", date: "2026-02-15", public: true },
+            { name: "Basant Panchami", date: "2026-02-22", public: true },
+            { name: "Valentine's Day", date: "2026-02-14", public: false },
+
+            // ===== MAR =====
+            { name: "Holi", date: "2026-03-04", public: true },
+            { name: "Dhulandi", date: "2026-03-05", public: false },
+            { name: "Eid-ul-Fitr", date: "2026-03-20", public: true },
+            { name: "Gudi Padwa / Ugadi", date: "2026-03-21", public: true },
+            { name: "Chaitra Navratri Start", date: "2026-03-21", public: false },
+            { name: "Mahavir Jayanti", date: "2026-03-31", public: true },
+
+            // ===== APR =====
+            { name: "Good Friday", date: "2026-04-03", public: true },
+            { name: "Easter Sunday", date: "2026-04-05", public: true },
+            { name: "Ambedkar Jayanti", date: "2026-04-14", public: true },
+            { name: "Ram Navami", date: "2026-04-17", public: true },
+            { name: "Hanuman Jayanti", date: "2026-04-23", public: true },
+
+            // ===== MAY =====
+            { name: "Buddha Purnima", date: "2026-05-22", public: true },
+            { name: "Eid-ul-Adha (Bakrid)", date: "2026-05-27", public: true },
+            { name: "Mother's Day", date: "2026-05-10", public: false },
+
+            // ===== JUN =====
+            { name: "Jagannath Rath Yatra", date: "2026-06-20", public: true },
+            { name: "Father's Day", date: "2026-06-21", public: false },
+
+            // ===== JUL =====
+            { name: "Muharram", date: "2026-07-26", public: true },
+            { name: "Guru Purnima", date: "2026-07-30", public: true },
+
+            // ===== AUG =====
+            { name: "Friendship Day", date: "2026-08-02", public: false },
+            { name: "Janmashtami", date: "2026-08-16", public: true },
+            { name: "Raksha Bandhan", date: "2026-08-29", public: true },
+            { name: "Parsi New Year", date: "2026-08-16", public: false },
+
+            // ===== SEP =====
+            { name: "Ganesh Chaturthi", date: "2026-09-10", public: true },
+            { name: "Onam", date: "2026-09-05", public: true },
+            { name: "Teachers' Day", date: "2026-09-05", public: false },
+
+            // ===== OCT =====
+            { name: "Navratri Start", date: "2026-10-09", public: false },
+            { name: "Dussehra", date: "2026-10-20", public: true },
+            { name: "Karva Chauth", date: "2026-10-25", public: false },
+
+            // ===== NOV =====
+            { name: "Diwali", date: "2026-11-08", public: true },
+            { name: "Govardhan Puja", date: "2026-11-09", public: true },
+            { name: "Bhai Dooj", date: "2026-11-10", public: true },
+            { name: "Chhath Puja", date: "2026-11-12", public: true },
+            { name: "Children's Day", date: "2026-11-14", public: false },
+            { name: "Guru Nanak Jayanti", date: "2026-11-24", public: true },
+
+            // ===== DEC =====
+            { name: "Christmas Eve", date: "2026-12-24", public: false },
+            { name: "New Year's Eve", date: "2026-12-31", public: false }
+        );
+    }
+
+    return holidays.sort((a, b) => a.date.localeCompare(b.date));
+};
+
 // Generate daily QR (Admin or Auto)
 export const generateDailyQR = async (req, res) => {
     try {
@@ -255,6 +343,7 @@ export const getMonthlyAttendance = async (req, res) => {
             ABSENT: 0,
             LEAVE: 0,
             PAID_LEAVE: 0,
+            HOLIDAY: 0,
             totalWorkingDays: new Date(targetYear, targetMonth, 0).getDate()
         };
 
@@ -268,17 +357,28 @@ export const getMonthlyAttendance = async (req, res) => {
         const todayStr = new Date().toISOString().split('T')[0];
         const joiningDateStr = new Date(employee.dateOfJoining).toISOString().split('T')[0];
 
+        // Get holidays for the year to exclude from ABSENT count
+        const holidays = getLocalHolidays(targetYear);
+
         let currentDate = new Date(targetYear, targetMonth - 1, 1);
         const lastDate = new Date(targetYear, targetMonth, 0);
 
         while (currentDate <= lastDate) {
             const dateStr = currentDate.toISOString().split('T')[0];
+            const isSunday = currentDate.getDay() === 0;
+            const monthDay = dateStr.substring(5);
+            const isHoliday = holidays.find(h => h.date && h.date.substring(5) === monthDay && h.public);
 
             // Only count if it's in the past and after joining date
             if (dateStr < todayStr && dateStr >= joiningDateStr) {
-                if (!attendanceMap.has(dateStr)) {
+                if (isSunday || isHoliday) {
+                    summary.HOLIDAY++;
+                } else if (!attendanceMap.has(dateStr)) {
                     summary.ABSENT++;
                 }
+            } else if (isSunday || isHoliday) {
+                // Also count future holidays in the month for summary
+                summary.HOLIDAY++;
             }
             currentDate.setDate(currentDate.getDate() + 1);
         }
@@ -370,5 +470,82 @@ export const getGlobalAttendanceStats = async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Update Attendance (Admin)
+export const updateAttendance = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status, checkInTime } = req.body;
+
+        const attendance = await Attendance.findById(id);
+        if (!attendance) {
+            return res.status(404).json({ success: false, message: 'Attendance record not found' });
+        }
+
+        if (status) attendance.status = status;
+        if (checkInTime) attendance.checkInTime = checkInTime;
+
+        await attendance.save();
+
+        res.status(200).json({
+            success: true,
+            data: attendance,
+            message: 'Attendance record updated successfully'
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Get All Attendance Records with Filtering (Admin)
+export const getAllAttendanceRecords = async (req, res) => {
+    try {
+        const { startDate, endDate, employeeId, status } = req.query;
+        let query = {};
+
+        if (startDate || endDate) {
+            query.date = {};
+            if (startDate) query.date.$gte = startDate;
+            if (endDate) query.date.$lte = endDate;
+        }
+
+        if (employeeId) {
+            const employee = await Employee.findOne({ employeeId });
+            if (employee) {
+                query.employee = employee._id;
+            }
+        }
+
+        if (status) {
+            query.status = status;
+        }
+
+        const records = await Attendance.find(query)
+            .populate('employee', 'firstName lastName employeeId department')
+            .sort({ date: -1 });
+
+        res.status(200).json({
+            success: true,
+            data: records
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Proxy for Holiday API to avoid CORS issues
+export const getHolidays = async (req, res) => {
+    try {
+        const { year } = req.query;
+        const holidays = getLocalHolidays(year);
+        res.status(200).json({
+            success: true,
+            holidays
+        });
+    } catch (error) {
+        console.error('Local Holiday Error:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };

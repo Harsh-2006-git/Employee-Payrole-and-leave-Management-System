@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, FileText, CheckCircle, AlertTriangle, Info } from 'lucide-react';
+import { Calendar, FileText, CheckCircle, AlertTriangle, Info, BookOpen } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
 
@@ -80,8 +80,14 @@ const ApplyLeave = () => {
 
     return (
         <div className="apply-leave-page">
-            <div className="page-header-simple">
-                <div className="badge-pill-indigo">Time Off Request</div>
+        <div className="page-header-simple">
+                <div className="page-header-top">
+                    <div className="badge-pill-indigo">Time Off Request</div>
+                    <button className="policy-guide-btn" onClick={() => navigate('/leave-policy')}>
+                        <BookOpen size={14} />
+                        Leave Policy Guide
+                    </button>
+                </div>
                 <h1>Apply for Leave</h1>
                 <p>Submit your digital application for review and approval</p>
             </div>
@@ -219,6 +225,11 @@ const ApplyLeave = () => {
                         <CheckCircle size={18} className="text-success" />
                         <p>Approved leaves are updated in your payroll record automatically.</p>
                     </div>
+
+                    <button className="policy-full-btn" onClick={() => navigate('/leave-policy')}>
+                        <BookOpen size={16} />
+                        View Full Leave Policy Reference
+                    </button>
                 </div>
             </motion.div>
 
@@ -261,6 +272,11 @@ const ApplyLeave = () => {
                 
                 .guidance-memo { background: #f8fafc; border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0; display: flex; gap: 12px; }
                 .guidance-memo p { margin: 0; font-size: 13px; color: #64748b; line-height: 1.5; font-weight: 500; }
+                .page-header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+                .policy-guide-btn { display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: #e0e7ff; color: #4338ca; border: none; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+                .policy-guide-btn:hover { background: #c7d2fe; transform: translateY(-1px); }
+                .policy-full-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 14px; background: #f5f3ff; color: #4338ca; border: 1.5px solid #c4b5fd; border-radius: 14px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 4px; }
+                .policy-full-btn:hover { background: #ede9fe; transform: translateY(-1px); }
             `}</style>
         </div>
     );

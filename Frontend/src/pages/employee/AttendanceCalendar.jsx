@@ -23,6 +23,7 @@ const AttendanceCalendar = () => {
     const [summary, setSummary] = useState(null);
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState(null);
+    const [holidays, setHolidays] = useState([]);
 
     const monthNames = [
         "January", "February", "March", "April", "May", "June",
@@ -56,6 +57,23 @@ const AttendanceCalendar = () => {
         };
         fetchInitialData();
     }, [paramEmployeeId]);
+
+    useEffect(() => {
+        fetchHolidays();
+    }, []);
+
+    const fetchHolidays = async () => {
+        try {
+            const res = await api.get(`/attendance/holidays`);
+            if (res.data.success) {
+                // Only keep public holidays, store as MM-DD for year-agnostic matching
+                const publicHolidays = (res.data.holidays || []).filter(h => h.public);
+                setHolidays(publicHolidays);
+            }
+        } catch (err) {
+            console.error("Failed to fetch holidays:", err);
+        }
+    };
 
     const fetchAttendance = async (empId, month, year) => {
         setLoading(true);
@@ -137,8 +155,17 @@ const AttendanceCalendar = () => {
             const isAfterJoining = joiningDateStr ? dateStr >= joiningDateStr : true;
 
             let status = record ? record.status : '';
-            if (!status && isPast && isAfterJoining) {
-                status = 'ABSENT';
+            const isSunday = date.getDay() === 0;
+            // Match holidays by month-day only (MM-DD), so 2025 API data works for any year
+            const monthDay = dateStr.substring(5); // "MM-DD"
+            const holiday = holidays.find(h => h.date && h.date.substring(5) === monthDay);
+
+            if (!status) {
+                if (holiday || isSunday) {
+                    status = 'HOLIDAY';
+                } else if (isPast && isAfterJoining) {
+                    status = 'ABSENT';
+                }
             }
 
             days.push(
@@ -157,7 +184,14 @@ const AttendanceCalendar = () => {
                             {status === 'LATE' && <Clock className="status-icon" />}
                             {status === 'ABSENT' && <XCircle className="status-icon" />}
                             {status === 'LEAVE' && <AlertCircle className="status-icon" />}
+                            {status === 'HOLIDAY' && <CalendarIcon className="status-icon" />}
                             <span className="status-label">{status}</span>
+                            {holiday && status === 'HOLIDAY' && (
+                                <span className="holiday-name" title={holiday.name}>{holiday.name}</span>
+                            )}
+                            {isSunday && status === 'HOLIDAY' && !holiday && (
+                                <span className="holiday-name">Sunday</span>
+                            )}
                         </div>
                     )}
                 </motion.div>
@@ -204,6 +238,10 @@ const AttendanceCalendar = () => {
                             <span className="stat-value">{summary.LEAVE}</span>
                             <span className="stat-label">Leave</span>
                         </div>
+                        <div className="stat-card holiday">
+                            <span className="stat-value">{summary.HOLIDAY || 0}</span>
+                            <span className="stat-label">Holiday</span>
+                        </div>
                     </div>
                 )}
             </header>
@@ -240,9 +278,10 @@ const AttendanceCalendar = () => {
                 <footer className="calendar-footer">
                     <div className="legend">
                         <div className="legend-item"><span className="dot present"></span> Present</div>
-                        <div className="legend-item"><span className="dot late"></span> Late (3 = 1 Absent)</div>
+                        <div className="legend-item"><span className="dot late"></span> Late</div>
                         <div className="legend-item"><span className="dot leave"></span> Leave</div>
                         <div className="legend-item"><span className="dot absent"></span> Absent</div>
+                        <div className="legend-item"><span className="dot holiday"></span> Holiday</div>
                     </div>
                 </footer>
             </main>
@@ -353,7 +392,7 @@ const AttendanceCalendar = () => {
 
                 .summary-grid {
                     display: grid;
-                    grid-template-columns: repeat(4, 1fr);
+                    grid-template-columns: repeat(5, 1fr);
                     gap: 10px;
                 }
 
@@ -389,6 +428,8 @@ const AttendanceCalendar = () => {
                 .stat-card.absent .stat-value { color: #991b1b; }
                 .stat-card.leave { border-left: 4px solid #3b82f6; }
                 .stat-card.leave .stat-value { color: #1e40af; }
+                .stat-card.holiday { border-left: 4px solid #a855f7; }
+                .stat-card.holiday .stat-value { color: #6b21a8; }
 
                 .calendar-card {
                     background: rgba(255, 255, 255, 0.8) !important;
@@ -557,6 +598,19 @@ const AttendanceCalendar = () => {
                 .calendar-day.late { background: #fffbeb; border-color: #fde68a; color: #92400e; }
                 .calendar-day.absent { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
                 .calendar-day.leave { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
+                .calendar-day.holiday { background: #faf5ff; border-color: #e9d5ff; color: #6b21a8; }
+
+                .holiday-name {
+                    font-size: 7px;
+                    font-weight: 700;
+                    text-align: center;
+                    margin-top: 2px;
+                    line-height: 1;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                }
 
                 .calendar-footer {
                     margin-top: 32px;
@@ -590,6 +644,7 @@ const AttendanceCalendar = () => {
                 .dot.late { background: #f59e0b; }
                 .dot.absent { background: #ef4444; }
                 .dot.leave { background: #3b82f6; }
+                .dot.holiday { background: #a855f7; }
 
                 .selection-prompt {
                     text-align: center;

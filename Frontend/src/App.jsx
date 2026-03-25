@@ -16,6 +16,8 @@ import LeaveHistory from './pages/employee/LeaveHistory';
 import AdminQRGenerator from './pages/admin/AdminQRGenerator';
 import EmployeeQRScanner from './pages/employee/EmployeeQRScanner';
 import AttendanceCalendar from './pages/employee/AttendanceCalendar';
+import AttendanceManagement from './pages/admin/AttendanceManagement';
+import LeavePolicy from './pages/employee/LeavePolicy';
 
 const ProtectedRoute = ({ children, role }) => {
   const { user, loading } = useAuth();
@@ -48,6 +50,7 @@ function AppRoutes() {
         <Route path="payroll" element={<ProtectedRoute role="ADMIN"><PayrollManagement /></ProtectedRoute>} />
         <Route path="templates" element={<ProtectedRoute role="ADMIN"><TemplateEditor /></ProtectedRoute>} />
         <Route path="admin-qr" element={<ProtectedRoute role="ADMIN"><AdminQRGenerator /></ProtectedRoute>} />
+        <Route path="attendance-mgmt" element={<ProtectedRoute role="ADMIN"><AttendanceManagement /></ProtectedRoute>} />
         <Route path="attendance/:employeeId" element={<ProtectedRoute role="ADMIN"><AttendanceCalendar /></ProtectedRoute>} />
 
         {/* Employee Routes */}
@@ -56,6 +59,7 @@ function AppRoutes() {
         <Route path="leave-history" element={<ProtectedRoute role="EMPLOYEE"><LeaveHistory /></ProtectedRoute>} />
         <Route path="scan-qr" element={<ProtectedRoute role="EMPLOYEE"><EmployeeQRScanner /></ProtectedRoute>} />
         <Route path="attendance" element={<ProtectedRoute role="EMPLOYEE"><AttendanceCalendar /></ProtectedRoute>} />
+        <Route path="leave-policy" element={<LeavePolicy />} />
       </Route>
     </Routes>
   );

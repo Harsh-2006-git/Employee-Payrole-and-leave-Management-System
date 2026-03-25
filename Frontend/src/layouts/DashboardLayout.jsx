@@ -12,7 +12,8 @@ import {
   History,
   Settings,
   QrCode,
-  ScanLine
+  ScanLine,
+  Calendar
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -24,6 +25,7 @@ const DashboardLayout = () => {
     { title: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> },
     { title: 'Employees', path: '/employees', icon: <Users size={20} /> },
     { title: 'Leave Requests', path: '/leaves', icon: <CalendarDays size={20} /> },
+    { title: 'Attendance', path: '/attendance-mgmt', icon: <Calendar size={18} /> },
     { title: 'Payroll', path: '/payroll', icon: <CreditCard size={20} /> },
     { title: 'QR Generator', path: '/admin-qr', icon: <QrCode size={20} /> },
     { title: 'System Templates', path: '/templates', icon: <Settings size={20} /> },
