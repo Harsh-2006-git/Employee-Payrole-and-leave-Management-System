@@ -25,7 +25,7 @@
 *   **Employee Lifecycle**: Comprehensive CRUD management for staff records and salary structures.
 *   **Leave Governance**: Streamlined approval workflow with automated balance auditing.
 *   **Payroll Engine**: Automated monthly calculation with tax, PF, and deduction logic.
-*   **Reporting Hub**: Real-time analytics and data visualization via interactive dashboards.
+*   **Reporting Hub**: Real time analytics and data visualization via interactive dashboards.
 *   **Digital Delivery**: Automated PDF payslip generation and email distribution.
 
 #### 👤 Employee Portal
